@@ -139,3 +139,39 @@ func writeToTar(source string, writer *tar.Writer, ignore []string) error {
 
 	return nil
 }
+
+func AddToTar(tarFilePath, additionalFilePath string) error {
+	stat, err := os.Stat(additionalFilePath)
+	if err != nil {
+		return err
+	}
+	tarFile, err := os.Open(tarFilePath)
+	defer tarFile.Close()
+	if err != nil {
+		return err
+	}
+	gzipWriter := gzip.NewWriter(tarFile)
+	defer gzipWriter.Close()
+
+	tarWriter := tar.NewWriter(gzipWriter)
+	defer tarWriter.Close()
+
+	header, err := tar.FileInfoHeader(stat, stat.Name())
+	if err != nil {
+		return err
+	}
+	err = tarWriter.WriteHeader(header)
+	if err != nil {
+		return err
+	}
+
+	additionalFile, err := os.Open(additionalFilePath)
+	defer additionalFile.Close()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(tarWriter, additionalFile)
+	return err
+}
