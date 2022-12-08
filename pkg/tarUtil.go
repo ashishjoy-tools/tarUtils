@@ -141,17 +141,12 @@ func writeToTar(source string, writer *tar.Writer, ignore []string) error {
 	return nil
 }
 
-func AddToTar(tarFilePath, additionalFilePath string) error {
-	stat, err := os.Stat(additionalFilePath)
+func AddToTar(tarContext []byte, filepath string) error {
+	stat, err := os.Stat(filepath)
 	if err != nil {
 		return err
 	}
-	tarFile, err := os.Open(tarFilePath)
-	defer tarFile.Close()
-	if err != nil {
-		return err
-	}
-	gzipWriter := gzip.NewWriter(tarFile)
+	gzipWriter := gzip.NewWriter(bytes.NewBuffer(tarContext))
 	defer gzipWriter.Close()
 
 	tarWriter := tar.NewWriter(gzipWriter)
@@ -166,7 +161,7 @@ func AddToTar(tarFilePath, additionalFilePath string) error {
 		return err
 	}
 
-	additionalFile, err := os.Open(additionalFilePath)
+	additionalFile, err := os.Open(filepath)
 	defer additionalFile.Close()
 
 	if err != nil {
