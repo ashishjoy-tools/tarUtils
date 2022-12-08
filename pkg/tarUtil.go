@@ -21,7 +21,7 @@ func CreateTar(source, tarName string, filesToIgnore []string) error {
 	tarWriter := tar.NewWriter(gzipWriter)
 	defer tarWriter.Close()
 
-	return writeToTar(source, tarWriter, append(filesToIgnore, tarName))
+	return writeToTar(filepath.Base(source), tarWriter, append(filesToIgnore, tarName))
 }
 
 func UnTar(source, destination string) error {
