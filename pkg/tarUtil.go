@@ -98,7 +98,6 @@ func writeToTar(source string, writer *tar.Writer, ignore []string) error {
 		println("Ignoring " + source)
 		return nil
 	}
-	println("Putting " + source)
 	stat, err := os.Stat(source)
 	if err != nil {
 		return err
@@ -141,7 +140,7 @@ func writeToTar(source string, writer *tar.Writer, ignore []string) error {
 	return nil
 }
 
-func AddToTar(tarContext []byte, filepath string) error {
+func AddToTar(tarContext []byte, filepath, filename string) error {
 	stat, err := os.Stat(filepath)
 	if err != nil {
 		return err
@@ -153,6 +152,7 @@ func AddToTar(tarContext []byte, filepath string) error {
 	defer tarWriter.Close()
 
 	header, err := tar.FileInfoHeader(stat, stat.Name())
+	header.Name = filename
 	if err != nil {
 		return err
 	}
