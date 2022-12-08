@@ -2,6 +2,7 @@ package tarUtil
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -174,4 +175,22 @@ func AddToTar(tarFilePath, additionalFilePath string) error {
 
 	_, err = io.Copy(tarWriter, additionalFile)
 	return err
+}
+
+func ContainFile(tarFileContent []byte, filename string) bool {
+	gzipReader, err := gzip.NewReader(bytes.NewBuffer(tarFileContent))
+	if err != nil {
+		return false
+	}
+	tarReader := tar.NewReader(gzipReader)
+	for {
+		header, err := tarReader.Next()
+		if err != nil {
+			break
+		}
+		if header.Name == filename {
+			return true
+		}
+	}
+	return false
 }
