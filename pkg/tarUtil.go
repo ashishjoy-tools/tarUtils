@@ -140,7 +140,7 @@ func writeToTar(source string, writer *tar.Writer, ignore []string) error {
 }
 
 func AddToTar(tarFilePath, filepath, filename string) error {
-	tarFile, err := os.Open(tarFilePath)
+	tarFile, err := os.OpenFile(tarFilePath, os.O_CREATE|os.O_RDWR, os.ModePerm)
 	if err != nil {
 		return err
 	}
