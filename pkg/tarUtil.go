@@ -140,36 +140,36 @@ func writeToTar(source string, writer *tar.Writer, ignore []string) error {
 	return nil
 }
 
-func AddToTar(tarContext []byte, filepath, filename string) error {
+func AddToTar(tarContent []byte, filepath, filename string) ([]byte, error) {
 	stat, err := os.Stat(filepath)
 	if err != nil {
-		return err
+		return tarContent, err
 	}
-	gzipWriter := gzip.NewWriter(bytes.NewBuffer(tarContext))
+	buffer := bytes.NewBuffer(tarContent)
+	gzipWriter := gzip.NewWriter(buffer)
 	defer gzipWriter.Close()
 
 	tarWriter := tar.NewWriter(gzipWriter)
 	defer tarWriter.Close()
 
 	header, err := tar.FileInfoHeader(stat, stat.Name())
-	header.Name = filename
 	if err != nil {
-		return err
+		return tarContent, err
 	}
+	header.Name = filename
 	err = tarWriter.WriteHeader(header)
 	if err != nil {
-		return err
+		return tarContent, err
 	}
 
 	additionalFile, err := os.Open(filepath)
+	if err != nil {
+		return tarContent, err
+	}
 	defer additionalFile.Close()
 
-	if err != nil {
-		return err
-	}
-
 	_, err = io.Copy(tarWriter, additionalFile)
-	return err
+	return buffer.Bytes(), err
 }
 
 func ContainFile(tarFileContent []byte, filename string) bool {
