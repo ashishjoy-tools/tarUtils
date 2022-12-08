@@ -2,7 +2,6 @@ package tarUtil
 
 import (
 	"archive/tar"
-	"bytes"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -140,13 +139,16 @@ func writeToTar(source string, writer *tar.Writer, ignore []string) error {
 	return nil
 }
 
-func AddToTar(tarContent []byte, filepath, filename string) ([]byte, error) {
+func AddToTar(tarFilePath, filepath, filename string) error {
+	tarFile, err := os.Open(tarFilePath)
+	if err != nil {
+		return err
+	}
 	stat, err := os.Stat(filepath)
 	if err != nil {
-		return tarContent, err
+		return err
 	}
-	buffer := bytes.NewBuffer(tarContent)
-	gzipWriter := gzip.NewWriter(buffer)
+	gzipWriter := gzip.NewWriter(tarFile)
 	defer gzipWriter.Close()
 
 	tarWriter := tar.NewWriter(gzipWriter)
@@ -154,26 +156,30 @@ func AddToTar(tarContent []byte, filepath, filename string) ([]byte, error) {
 
 	header, err := tar.FileInfoHeader(stat, stat.Name())
 	if err != nil {
-		return tarContent, err
+		return err
 	}
 	header.Name = filename
 	err = tarWriter.WriteHeader(header)
 	if err != nil {
-		return tarContent, err
+		return err
 	}
 
 	additionalFile, err := os.Open(filepath)
 	if err != nil {
-		return tarContent, err
+		return err
 	}
 	defer additionalFile.Close()
 
 	_, err = io.Copy(tarWriter, additionalFile)
-	return buffer.Bytes(), err
+	return err
 }
 
-func ContainFile(tarFileContent []byte, filename string) bool {
-	gzipReader, err := gzip.NewReader(bytes.NewBuffer(tarFileContent))
+func ContainFile(tarFilePath, filename string) bool {
+	tarFile, err := os.Open(tarFilePath)
+	if err != nil {
+		return false
+	}
+	gzipReader, err := gzip.NewReader(tarFile)
 	if err != nil {
 		return false
 	}
